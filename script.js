@@ -14,27 +14,29 @@ function initializeScanner() {
       inputStream: {
         name: "Live",
         type: "LiveStream",
-        target: document.querySelector("#barcode-scanner"), // Display video preview here
+        target: document.querySelector("#barcode-scanner"), // The element where the video will be displayed
         constraints: {
-          width: { ideal: 1280 }, // Ideal width for the video stream
-          height: { ideal: 720 }, // Ideal height for the video stream
-          facingMode: "environment", // Use rear camera
+          width: { min: 640, ideal: 1280, max: 1920 },
+          height: { min: 480, ideal: 720, max: 1080 },
+          facingMode: { ideal: "environment" }, // Use rear camera on mobile
         },
       },
       decoder: {
         readers: ["ean_reader"], // For ISBN barcodes
       },
+      locate: true, // Try to locate the barcode in the image
     },
     function (err) {
       if (err) {
         console.error("Error initializing scanner:", err);
-        alert("Error initializing scanner. Check console for details.");
+        alert("Error initializing scanner. Please check console for details.");
         return;
       }
       Quagga.start(); // Start the scanner
     }
   );
 
+  // Display what is being processed by the scanner (debugging purposes)
   Quagga.onProcessed(function (result) {
     const drawingCanvas = Quagga.canvas.dom.overlay;
     const drawingContext = Quagga.canvas.ctx.overlay;
@@ -42,23 +44,37 @@ function initializeScanner() {
     if (result) {
       drawingContext.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
       if (result.boxes) {
-        result.boxes
-          .filter((box) => box !== result.box)
-          .forEach((box) => {
-            Quagga.ImageDebug.drawPath(box, { x: 0, y: 1 }, drawingContext, {
-              color: "green",
-              lineWidth: 2,
-            });
+        result.boxes.forEach((box) => {
+          Quagga.ImageDebug.drawPath(box, { x: 0, y: 1 }, drawingContext, {
+            color: "green",
+            lineWidth: 2,
           });
+        });
+      }
+      if (result.box) {
+        Quagga.ImageDebug.drawPath(result.box, { x: 0, y: 1 }, drawingContext, {
+          color: "#00F",
+          lineWidth: 2,
+        });
+      }
+      if (result.codeResult && result.codeResult.code) {
+        Quagga.ImageDebug.drawPath(result.line, { x: 'x', y: 'y' }, drawingContext, {
+          color: 'red',
+          lineWidth: 3
+        });
       }
     }
   });
 
+  // Process the barcode once it's detected
   Quagga.onDetected((result) => {
     const isbn = result.codeResult.code;
-    fetchBookDetails(isbn);
-    Quagga.stop(); // Stop scanning after detection
-    document.getElementById("barcode-scanner").style.display = "none";
+    if (isbn) {
+      console.log("Barcode detected:", isbn);
+      fetchBookDetails(isbn);
+      Quagga.stop(); // Stop scanning after detection
+      document.getElementById("barcode-scanner").style.display = "none";
+    }
   });
 }
 
@@ -73,9 +89,13 @@ function fetchBookDetails(isbn) {
         addBookToSection(book);
       } else {
         console.error("Book not found");
+        alert("Book not found. Please try another book.");
       }
     })
-    .catch((err) => console.error(err));
+    .catch((err) => {
+      console.error("Error fetching book details:", err);
+      alert("Error fetching book details. Please check the console for details.");
+    });
 }
 
 // Add book to the list and sort
