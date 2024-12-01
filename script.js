@@ -14,9 +14,11 @@ function initializeScanner() {
       inputStream: {
         name: "Live",
         type: "LiveStream",
-        target: document.querySelector("#barcode-scanner"),
+        target: document.querySelector("#barcode-scanner"), // Display video preview here
         constraints: {
-          facingMode: "environment", // Use rear camera on mobile
+          width: { ideal: 1280 }, // Ideal width for the video stream
+          height: { ideal: 720 }, // Ideal height for the video stream
+          facingMode: "environment", // Use rear camera
         },
       },
       decoder: {
@@ -25,18 +27,37 @@ function initializeScanner() {
     },
     function (err) {
       if (err) {
-        console.error(err);
-        alert("Error initializing scanner: " + err.message);
+        console.error("Error initializing scanner:", err);
+        alert("Error initializing scanner. Check console for details.");
         return;
       }
-      Quagga.start();
+      Quagga.start(); // Start the scanner
     }
   );
+
+  Quagga.onProcessed(function (result) {
+    const drawingCanvas = Quagga.canvas.dom.overlay;
+    const drawingContext = Quagga.canvas.ctx.overlay;
+
+    if (result) {
+      drawingContext.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+      if (result.boxes) {
+        result.boxes
+          .filter((box) => box !== result.box)
+          .forEach((box) => {
+            Quagga.ImageDebug.drawPath(box, { x: 0, y: 1 }, drawingContext, {
+              color: "green",
+              lineWidth: 2,
+            });
+          });
+      }
+    }
+  });
 
   Quagga.onDetected((result) => {
     const isbn = result.codeResult.code;
     fetchBookDetails(isbn);
-    Quagga.stop(); // Stop scanning after a successful detection
+    Quagga.stop(); // Stop scanning after detection
     document.getElementById("barcode-scanner").style.display = "none";
   });
 }
