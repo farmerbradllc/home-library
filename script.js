@@ -8,30 +8,31 @@ document.getElementById("start-scanner").addEventListener("click", () => {
 });
 
 // Initialize Quagga for barcode scanning
-    Quagga.init(
-        {
-          inputStream: {
-            name: "Live",
-            type: "LiveStream",
-            target: document.querySelector("#barcode-scanner"), // Video element to display the camera preview
-            constraints: {
-              facingMode: "environment", // Prefer rear camera for mobile devices
-            },
-          },
-          decoder: {
-            readers: ["ean_reader"], // For ISBN barcodes
-          },
-          locate: true,
+function initializeScanner() {
+  Quagga.init(
+    {
+      inputStream: {
+        name: "Live",
+        type: "LiveStream",
+        target: document.querySelector("#barcode-scanner"), // The element where the video will be displayed
+        constraints: {
+          facingMode: "environment", // Prefer rear camera for scanning
         },
-        function (err) {
-          if (err) {
-            console.error("Error initializing scanner:", err);
-            alert("Error initializing scanner. Please check console for details.");
-            return;
-          }
-          Quagga.start(); // Start the camera preview
-        }
-      );      
+      },
+      decoder: {
+        readers: ["ean_reader"], // For ISBN barcodes (EAN)
+      },
+      locate: true,
+    },
+    function (err) {
+      if (err) {
+        console.error("Error initializing scanner:", err);
+        alert("Error initializing scanner. Please check console for details.");
+        return;
+      }
+      Quagga.start(); // Start the scanner
+    }
+  );
 
   // Process the barcode once it's detected
   Quagga.onDetected((result) => {
