@@ -16,15 +16,13 @@ function initializeScanner() {
         type: "LiveStream",
         target: document.querySelector("#barcode-scanner"), // The element where the video will be displayed
         constraints: {
-          width: { min: 640, ideal: 1280, max: 1920 },
-          height: { min: 480, ideal: 720, max: 1080 },
-          facingMode: { ideal: "environment" }, // Use rear camera on mobile
+          facingMode: "environment", // Prefer rear camera for scanning
         },
       },
       decoder: {
-        readers: ["ean_reader"], // For ISBN barcodes
+        readers: ["ean_reader"], // For ISBN barcodes (EAN)
       },
-      locate: true, // Try to locate the barcode in the image
+      locate: true,
     },
     function (err) {
       if (err) {
@@ -35,36 +33,6 @@ function initializeScanner() {
       Quagga.start(); // Start the scanner
     }
   );
-
-  // Display what is being processed by the scanner (debugging purposes)
-  Quagga.onProcessed(function (result) {
-    const drawingCanvas = Quagga.canvas.dom.overlay;
-    const drawingContext = Quagga.canvas.ctx.overlay;
-
-    if (result) {
-      drawingContext.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
-      if (result.boxes) {
-        result.boxes.forEach((box) => {
-          Quagga.ImageDebug.drawPath(box, { x: 0, y: 1 }, drawingContext, {
-            color: "green",
-            lineWidth: 2,
-          });
-        });
-      }
-      if (result.box) {
-        Quagga.ImageDebug.drawPath(result.box, { x: 0, y: 1 }, drawingContext, {
-          color: "#00F",
-          lineWidth: 2,
-        });
-      }
-      if (result.codeResult && result.codeResult.code) {
-        Quagga.ImageDebug.drawPath(result.line, { x: 'x', y: 'y' }, drawingContext, {
-          color: 'red',
-          lineWidth: 3
-        });
-      }
-    }
-  });
 
   // Process the barcode once it's detected
   Quagga.onDetected((result) => {
@@ -124,6 +92,9 @@ function updateDisplay() {
     listItem.textContent = `${book.title} by ${book.author}`;
     listElement.appendChild(listItem);
   });
+
+  // Enable the "Generate Labels" button once books are added
+  document.getElementById("generate-labels").style.display = bookList.length > 0 ? "block" : "none";
 }
 
 // Generate printable labels
