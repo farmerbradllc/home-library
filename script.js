@@ -46,23 +46,34 @@ function initializeScanner() {
   });
 }
 
-// Fetch book details using Google Books API
-function fetchBookDetails(isbn) {
-  const url = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`;
+// Event listener for manual book title search
+document.getElementById("search-book").addEventListener("click", () => {
+  const title = document.getElementById("book-title").value.trim();
+  if (title) {
+    searchBookByTitle(title);
+  } else {
+    alert("Please enter a book title.");
+  }
+});
+
+// Function to search for a book by its title using Google Books API
+function searchBookByTitle(title) {
+  const url = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(title)}`;
   fetch(url)
-    .then((response) => response.json())
-    .then((data) => {
+    .then(response => response.json())
+    .then(data => {
       if (data.items && data.items.length > 0) {
+        // Use the first book found
         const book = data.items[0].volumeInfo;
         addBookToSection(book);
       } else {
         console.error("Book not found");
-        alert("Book not found. Please try another book.");
+        alert("Book not found. Please try another title.");
       }
     })
-    .catch((err) => {
+    .catch(err => {
       console.error("Error fetching book details:", err);
-      alert("Error fetching book details. Please check the console for details.");
+      alert("Error fetching book details. Please check console for details.");
     });
 }
 

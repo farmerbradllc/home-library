@@ -11,8 +11,16 @@
     <h1>Book Organizer</h1>
     <button id="start-scanner">Scan Book</button>
     <video id="barcode-scanner" autoplay playsinline style="display: none;"></video>
+    
+    <div class="manual-search">
+      <h2>Manually Search for a Book</h2>
+      <input type="text" id="book-title" placeholder="Enter book title">
+      <button id="search-book">Search</button>
+    </div>
+
     <h2>Scanned Books</h2>
     <ul id="book-list"></ul>
+    
     <button id="generate-labels" style="display: none;">Generate Printable Labels</button>
     <div id="labels-container" style="display: none;">
       <h2>Labels</h2>
