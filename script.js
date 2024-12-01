@@ -83,6 +83,7 @@ function addBookToSection(book) {
     title: book.title,
     author: book.authors ? book.authors[0] : "Unknown Author",
     category: book.categories ? book.categories[0] : "General",
+    dewey: book.industryIdentifiers ? getDeweyDecimal(book.industryIdentifiers) : "N/A",
   };
 
   bookList.push(bookDetails);
@@ -93,19 +94,36 @@ function addBookToSection(book) {
   updateDisplay();
 }
 
+// Function to get Dewey Decimal from the identifiers
+function getDeweyDecimal(identifiers) {
+  // This function assumes identifiers contain Dewey; you might have to customize this based on actual data structure.
+  const deweyIdentifier = identifiers.find(identifier => identifier.type === "DEWEY");
+  return deweyIdentifier ? deweyIdentifier.identifier : "N/A";
+}
+
 // Update the displayed book list
 function updateDisplay() {
   const listElement = document.getElementById("book-list");
   listElement.innerHTML = "";
 
-  bookList.forEach((book) => {
+  bookList.forEach((book, index) => {
     const listItem = document.createElement("li");
-    listItem.textContent = `${book.title} by ${book.author}`;
+    listItem.innerHTML = `
+      <b>${book.title}</b> by ${book.author} <br>
+      <i>Category: ${book.category}</i>, Dewey Decimal: ${book.dewey} <br>
+      <button onclick="deleteBook(${index})">Delete</button>
+    `;
     listElement.appendChild(listItem);
   });
 
   // Enable the "Generate Labels" button once books are added
   document.getElementById("generate-labels").style.display = bookList.length > 0 ? "block" : "none";
+}
+
+// Delete book from the list
+function deleteBook(index) {
+  bookList.splice(index, 1);
+  updateDisplay();
 }
 
 // Generate printable labels
@@ -120,6 +138,7 @@ document.getElementById("generate-labels").addEventListener("click", () => {
       <p><b>${truncate(book.title, 20)}</b></p>
       <p>${book.author}</p>
       <p>${book.category}</p>
+      <p>Dewey Decimal: ${book.dewey}</p>
     `;
     labelsContainer.appendChild(label);
   });
