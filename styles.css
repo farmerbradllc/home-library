@@ -1,0 +1,83 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9;
+  }
+  
+  .container {
+    padding: 20px;
+    text-align: center;
+  }
+  
+  h1 {
+    color: #333;
+  }
+  
+  button {
+    padding: 10px 20px;
+    margin: 10px 0;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  
+  button:hover:not(:disabled) {
+    background-color: #0056b3;
+  }
+  
+  video {
+    width: 100%;
+    max-width: 300px;
+    margin: 10px auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  ul li {
+    padding: 10px;
+    margin: 5px 0;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    text-align: left;
+  }
+  
+  #labels-container {
+    margin-top: 20px;
+  }
+  
+  .label {
+    width: 2in;
+    height: 1in;
+    border: 1px solid black;
+    margin: 0.1in;
+    display: inline-block;
+    text-align: center;
+    font-size: 12px;
+    padding: 5px;
+    box-sizing: border-box;
+  }
+  
+  @media print {
+    #barcode-scanner,
+    #start-scanner,
+    #generate-labels,
+    #print-labels {
+      display: none;
+    }
+  }
+  

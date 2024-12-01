@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile Book Organizer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Book Organizer</h1>
+    <button id="start-scanner">Scan Book</button>
+    <video id="barcode-scanner" autoplay playsinline style="display: none;"></video>
+    <h2>Scanned Books</h2>
+    <ul id="book-list"></ul>
+    <button id="generate-labels">Generate Printable Labels</button>
+    <div id="labels-container" style="display: none;">
+      <h2>Labels</h2>
+      <div id="labels"></div>
+      <button id="print-labels">Print Labels</button>
+    </div>
+  </div>
+  <script src="https://unpkg.com/quagga/dist/quagga.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
