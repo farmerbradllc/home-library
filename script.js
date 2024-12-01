@@ -98,6 +98,7 @@ function addBookToSection(book) {
     author: book.authors ? book.authors[0] : "Unknown Author",
     category: book.categories ? book.categories[0] : "General",
     dewey: book.industryIdentifiers ? getDeweyDecimal(book.industryIdentifiers) : "N/A",
+    coverImage: book.imageLinks ? book.imageLinks.thumbnail : "https://via.placeholder.com/128x195?text=No+Cover"
   };
 
   bookList.push(bookDetails);
@@ -124,6 +125,7 @@ function updateDisplay() {
   bookList.forEach((book, index) => {
     const listItem = document.createElement("li");
     listItem.innerHTML = `
+      <img src="${book.coverImage}" alt="${book.title} cover" style="width: 100px; height: auto; vertical-align: middle; margin-right: 10px;">
       <b>${book.title}</b> by ${book.author} <br>
       <i>Category: ${book.category}</i>, Dewey Decimal: ${book.dewey} <br>
       <button onclick="deleteBook(${index})">Delete</button>
@@ -151,6 +153,7 @@ document.getElementById("generate-labels").addEventListener("click", () => {
     const label = document.createElement("div");
     label.className = "label";
     label.innerHTML = `
+      <img src="${book.coverImage}" alt="${book.title} cover" style="width: 50px; height: auto; vertical-align: middle; margin-bottom: 10px;">
       <p><b>${truncate(book.title, 20)}</b></p>
       <p>${book.author}</p>
       <p>${book.category}</p>
