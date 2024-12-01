@@ -28,7 +28,7 @@ function initializeScanner() {
       inputStream: {
         name: "Live",
         type: "LiveStream",
-        target: document.querySelector("#barcode-scanner"), // The element where the video will be displayed
+        target: document.querySelector("#barcode-scanner"),
         constraints: {
           facingMode: "environment", // Prefer rear camera for scanning
         },
@@ -70,6 +70,16 @@ document.getElementById("search-book").addEventListener("click", () => {
   }
 });
 
+// Event listener for manual ISBN search
+document.getElementById("search-isbn").addEventListener("click", () => {
+  const isbn = document.getElementById("isbn-input").value.trim();
+  if (isbn) {
+    fetchBookDetails(isbn);
+  } else {
+    alert("Please enter an ISBN.");
+  }
+});
+
 // Function to search for a book by its title using Google Books API
 function searchBookByTitle(title) {
   const url = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(title)}`;
@@ -92,23 +102,59 @@ function searchBookByTitle(title) {
 }
 
 // Add book to the list and sort
+// Add book to the list and sort
 function addBookToSection(book) {
-  const bookDetails = {
-    title: book.title,
-    author: book.authors ? book.authors[0] : "Unknown Author",
-    category: book.categories ? book.categories[0] : "General",
-    dewey: book.industryIdentifiers ? getDeweyDecimal(book.industryIdentifiers) : "N/A",
-    coverImage: book.imageLinks ? book.imageLinks.thumbnail : "https://via.placeholder.com/128x195?text=No+Cover"
-  };
-
-  bookList.push(bookDetails);
-
-  // Sort alphabetically by title
-  bookList.sort((a, b) => a.title.localeCompare(b.title));
-
-  saveLibraryToLocalStorage();  // Save changes to local storage
-  updateDisplay();
-}
+    const bookDetails = {
+      title: book.title,
+      author: book.authors ? book.authors[0] : "Unknown Author",
+      category: book.categories ? book.categories[0] : "General",
+      dewey: book.industryIdentifiers ? getDeweyDecimal(book.industryIdentifiers) : "N/A",
+      coverImage: book.imageLinks ? book.imageLinks.thumbnail : "https://via.placeholder.com/128x195?text=No+Cover"
+    };
+  
+    // Attempt to get Dewey Decimal from OpenLibrary if not found
+    if (bookDetails.dewey === "N/A") {
+      fetchDeweyFromOpenLibrary(book.title, (deweyNumber) => {
+        bookDetails.dewey = deweyNumber;
+        bookList.push(bookDetails);
+        saveLibraryToLocalStorage();
+        updateDisplay();
+      });
+    } else {
+      bookList.push(bookDetails);
+      saveLibraryToLocalStorage();
+      updateDisplay();
+    }
+  }
+  
+  // Function to get Dewey Decimal from the identifiers
+  function getDeweyDecimal(identifiers) {
+    const deweyIdentifier = identifiers.find(identifier => identifier.type === "DEWEY");
+    return deweyIdentifier ? deweyIdentifier.identifier : "N/A";
+  }
+  
+  // Fetch Dewey Decimal from OpenLibrary
+  function fetchDeweyFromOpenLibrary(title, callback) {
+    const url = `https://openlibrary.org/search.json?title=${encodeURIComponent(title)}`;
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        if (data.docs && data.docs.length > 0) {
+          const bookData = data.docs[0];
+          if (bookData.dewey_decimal_class && bookData.dewey_decimal_class.length > 0) {
+            callback(bookData.dewey_decimal_class[0]);
+          } else {
+            callback("N/A");
+          }
+        } else {
+          callback("N/A");
+        }
+      })
+      .catch(err => {
+        console.error("Error fetching Dewey Decimal from OpenLibrary:", err);
+        callback("N/A");
+      });
+  }
 
 // Function to get Dewey Decimal from the identifiers
 function getDeweyDecimal(identifiers) {
@@ -118,13 +164,16 @@ function getDeweyDecimal(identifiers) {
 }
 
 // Update the displayed book list
-function updateDisplay() {
+function updateDisplay(filteredBooks = null) {
   const listElement = document.getElementById("book-list");
   listElement.innerHTML = "";
 
-  bookList.forEach((book, index) => {
+  const booksToDisplay = filteredBooks || bookList;
+
+  booksToDisplay.forEach((book, index) => {
     const listItem = document.createElement("li");
     listItem.innerHTML = `
+      <input type="checkbox" class="select-book" data-index="${index}">
       <img src="${book.coverImage}" alt="${book.title} cover" style="width: 100px; height: auto; vertical-align: middle; margin-right: 10px;">
       <b>${book.title}</b> by ${book.author} <br>
       <i>Category: ${book.category}</i>, Dewey Decimal: ${book.dewey} <br>
@@ -134,7 +183,8 @@ function updateDisplay() {
   });
 
   // Enable the "Generate Labels" button once books are added
-  document.getElementById("generate-labels").style.display = bookList.length > 0 ? "block" : "none";
+  document.getElementById("generate-all-labels").style.display = bookList.length > 0 ? "block" : "none";
+  document.getElementById("generate-selected-labels").style.display = bookList.length > 0 ? "block" : "none";
 }
 
 // Delete book from the list
@@ -144,12 +194,29 @@ function deleteBook(index) {
   updateDisplay();
 }
 
-// Generate printable labels
-document.getElementById("generate-labels").addEventListener("click", () => {
+// Generate printable labels for selected books
+document.getElementById("generate-selected-labels").addEventListener("click", () => {
+  const selectedBooks = [];
+  const checkboxes = document.querySelectorAll('.select-book:checked');
+
+  checkboxes.forEach(checkbox => {
+    const index = checkbox.dataset.index;
+    selectedBooks.push(bookList[index]);
+  });
+
+  generateLabels(selectedBooks);
+});
+
+// Generate printable labels for all books
+document.getElementById("generate-all-labels").addEventListener("click", () => {
+  generateLabels(bookList);
+});
+
+function generateLabels(books) {
   const labelsContainer = document.getElementById("labels");
   labelsContainer.innerHTML = "";
 
-  bookList.forEach((book) => {
+  books.forEach((book) => {
     const label = document.createElement("div");
     label.className = "label";
     label.innerHTML = `
@@ -163,7 +230,7 @@ document.getElementById("generate-labels").addEventListener("click", () => {
   });
 
   document.getElementById("labels-container").style.display = "block";
-});
+}
 
 // Helper to truncate long titles
 function truncate(str, length) {
@@ -210,4 +277,15 @@ document.getElementById("import-library").addEventListener("change", (event) => 
     };
     reader.readAsText(file);
   }
+});
+
+// Filter the book list based on user input
+document.getElementById("filter-books").addEventListener("input", (e) => {
+  const filterText = e.target.value.toLowerCase();
+  const filteredBooks = bookList.filter(book => 
+    book.title.toLowerCase().includes(filterText) || 
+    book.author.toLowerCase().includes(filterText)
+  );
+
+  updateDisplay(filteredBooks);
 });

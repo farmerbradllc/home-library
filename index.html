@@ -10,18 +10,28 @@
   <div class="container">
     <h1>Book Organizer</h1>
     <button id="start-scanner">Scan Book</button>
+    <div class="manual-isbn">
+      <h2>Manually Enter ISBN</h2>
+      <input type="text" id="isbn-input" placeholder="Enter ISBN">
+      <button id="search-isbn">Search by ISBN</button>
+    </div>
     <video id="barcode-scanner" autoplay playsinline style="display: none;"></video>
     
     <div class="manual-search">
       <h2>Manually Search for a Book</h2>
-      <input type="text" id="book-title" placeholder="Enter book title">
+      <input type="text" id="book-title" placeholder="Enter book title" list="book-titles">
+      <datalist id="book-titles"></datalist>
       <button id="search-book">Search</button>
     </div>
 
     <h2>Scanned Books</h2>
+    <div class="filter-container">
+      <input type="text" id="filter-books" placeholder="Filter books by title or author">
+    </div>
     <ul id="book-list"></ul>
     
-    <button id="generate-labels" style="display: none;">Generate Printable Labels</button>
+    <button id="generate-selected-labels" style="display: none;">Generate Labels for Selected Books</button>
+    <button id="generate-all-labels" style="display: none;">Generate Printable Labels for All Books</button>
     <div id="labels-container" style="display: none;">
       <h2>Labels</h2>
       <div id="labels"></div>
