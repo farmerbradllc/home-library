@@ -1,5 +1,19 @@
 let bookList = [];
 
+// Load the library from local storage on page load
+window.onload = () => {
+  const storedLibrary = localStorage.getItem('bookLibrary');
+  if (storedLibrary) {
+    bookList = JSON.parse(storedLibrary);
+    updateDisplay();
+  }
+};
+
+// Save the library to local storage whenever it changes
+function saveLibraryToLocalStorage() {
+  localStorage.setItem('bookLibrary', JSON.stringify(bookList));
+}
+
 // Initialize scanner when the button is clicked
 document.getElementById("start-scanner").addEventListener("click", () => {
   const scanner = document.getElementById("barcode-scanner");
@@ -91,6 +105,7 @@ function addBookToSection(book) {
   // Sort alphabetically by title
   bookList.sort((a, b) => a.title.localeCompare(b.title));
 
+  saveLibraryToLocalStorage();  // Save changes to local storage
   updateDisplay();
 }
 
@@ -123,6 +138,7 @@ function updateDisplay() {
 // Delete book from the list
 function deleteBook(index) {
   bookList.splice(index, 1);
+  saveLibraryToLocalStorage();  // Save changes to local storage
   updateDisplay();
 }
 
@@ -154,4 +170,41 @@ function truncate(str, length) {
 // Print labels
 document.getElementById("print-labels").addEventListener("click", () => {
   window.print();
+});
+
+// Export the library to a JSON file
+document.getElementById("export-library").addEventListener("click", () => {
+  const dataStr = JSON.stringify(bookList, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "bookLibrary.json";
+  a.click();
+
+  URL.revokeObjectURL(url);
+});
+
+// Import the library from a JSON file
+document.getElementById("import-library").addEventListener("change", (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const importedData = JSON.parse(e.target.result);
+        if (Array.isArray(importedData)) {
+          bookList = importedData;
+          saveLibraryToLocalStorage();  // Save imported data to local storage
+          updateDisplay();  // Update the display with the imported data
+        } else {
+          alert("Invalid file format. Please select a valid JSON file.");
+        }
+      } catch (error) {
+        alert("Error reading file. Please ensure it is a valid JSON file.");
+      }
+    };
+    reader.readAsText(file);
+  }
 });
